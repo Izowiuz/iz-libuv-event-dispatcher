@@ -16,7 +16,7 @@ struct uv_poll_s;
 struct uv_timer_s;
 struct uv_handle_s;
 
-namespace i9ms
+namespace i9ms::Eventing
 {
     class LibUvEventDispatcher final : public QAbstractEventDispatcher
     {
@@ -41,32 +41,20 @@ namespace i9ms
         void registerSocketNotifier(QSocketNotifier* notifier) override;
         void unregisterSocketNotifier(QSocketNotifier* notifier) override;
 
+        // prototype - not currently used -->
+
         void enableSocketNotifier(QSocketNotifier* notifier);
         void disableSocketNotifier(QSocketNotifier* notifier);
 
-        void registerTimer(int timerId, int interval, Qt::TimerType timerType, QObject* object) override;
+        // prototype - not currently used <--
+
+        void registerTimer(int timerId, qint64 interval, Qt::TimerType timerType, QObject* object) override;
         bool unregisterTimer(int timerId) override;
         bool unregisterTimers(QObject* object) override;
 
         QList<QAbstractEventDispatcher::TimerInfo> registeredTimers(QObject* object) const override;
         int remainingTime(int timerId) override;
         void wakeUp() override;
-
-#if defined(Q_OS_WIN)
-        // windows specific members - not implemented -->
-
-        bool registerEventNotifier(QWinEventNotifier* notifier) override;
-        void unregisterEventNotifier(QWinEventNotifier* notifier) override;
-
-        // <-- windows specific members - not implemented
-#endif
-
-        // obsolete members - not implemented -->
-
-        void flush() override;
-        bool hasPendingEvents() override;
-
-        // <-- obsolete members - not implemented
 
         // <-- QAbstractEventDispatcher interface
 
@@ -96,7 +84,7 @@ namespace i9ms
         struct TimerData {
             TimerData() = delete;
 
-            explicit TimerData(int timerID, int interval, QObject* qobject, Qt::TimerType timerType, uv_timer_s* timer, LibUvEventDispatcher* context)
+            explicit TimerData(int timerID, qint64 interval, QObject* qobject, Qt::TimerType timerType, uv_timer_s* timer, LibUvEventDispatcher* context)
                 : timerID(timerID)
                 , interval(interval)
                 , qobject(qobject)
@@ -108,7 +96,7 @@ namespace i9ms
 
             int timerID;
             uint64_t lastFired{ 0 };
-            int interval;
+            qint64 interval;
             QObject* qobject;
             Qt::TimerType timerType;
             uv_timer_s* timer;
@@ -145,4 +133,4 @@ namespace i9ms
     };
 }   // namespace i9ms
 
-Q_DECLARE_METATYPE(i9ms::LibUvEventDispatcher::PollerData*);
+Q_DECLARE_METATYPE(i9ms::Eventing::LibUvEventDispatcher::PollerData*);
