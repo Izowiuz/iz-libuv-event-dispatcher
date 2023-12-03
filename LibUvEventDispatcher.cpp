@@ -169,13 +169,15 @@ void LibUvEventDispatcher::unregisterSocketNotifier(QSocketNotifier* notifier)
     auto pollerData = notifier->property("socketData").value<PollerData*>();
     pollerData->events &= ~events;
 
-    // bne event types left? schedule deletion of libuv's poller
+    // no event types left? schedule deletion of libuv's poller
     if (pollerData->events == 0) {
+        if (!uv_is_closing(( uv_handle_t* )pollerData->uvPollData)) {
+            ::uv_close(( uv_handle_t* )pollerData->uvPollData, [](uv_handle_t* handle) { delete handle; });
+        }
+
         // we can delete this now
         notifier->setProperty("socketData", QVariant());
         m_socketPollers.erase(notifier->socket());
-
-        ::uv_close(( uv_handle_t* )pollerData->uvPollData, [](uv_handle_t* handle) { delete handle; });
     } else {
         // actualize libuv polling
         ::uv_poll_start(pollerData->uvPollData, pollerData->events, LibUvEventDispatcher::socketCallback);
